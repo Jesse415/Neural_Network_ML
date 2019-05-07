@@ -1,6 +1,3 @@
-import matplotlib
-import numpy as np
-
 #TODO: Neural network needs 3 layers:
 #      1. Input layer
 #      2. Hidden layer
@@ -113,3 +110,165 @@ import numpy as np
 #              (b) Part 2 (50 marks)
 #              (c) Part 3 (20 marks)
 #              (d) Report quality (10 marks)
+import math
+import random
+import collections
+import pickle as cPickle
+import gzip
+import numpy as np
+
+##############################################################
+# The list sizes contains number of neurons
+# 2 neurons in first layer, 3 neurons in the second 1 in third
+# net = Network([2,3,1])
+##############################################################
+class Network(object):
+    def __init__(self,sizes):
+        self.numberLayers = len(sizes)
+        self.sizes = sizes
+        self.biases = [np.random.randn(y,1) for y in sizes[1:]]
+        self.weights = [np.random.randn(y,x)
+            for x, y in zip(sizes[:1], sizes[1:])]
+
+
+
+    def forward(self, i):
+        for b, w in zip(self.biases, self.weights):
+            i = sigmoid(np.dot(w, i)+b)
+        return i
+
+    ####################################
+    # Train the network with miniBatchs
+    ####################################
+    def StochasticGD(self, trainingData, epochs, miniBatchSize, learnRate, testData = None):
+        if testData: nTest = len(testData)
+        n = len(trainingData)
+
+
+        ############################################
+        # Randomly shuffle training Data then break
+        # into Mini Batchs
+        ############################################
+        for j in xrange(epochs):
+            random.shuffle(trainingData)
+            miniBatchs = [
+                trainingData[x:x+miniBatchSize]
+                for x in xrange(0, n, miniBatchSize)
+            ]
+
+        #########################################
+        # For each Mini Batch update Weights and
+        # Biases for ONE gradient descent
+        #########################################
+        for miniBatch in miniBatchs:
+            self.updateMiniBatch(miniBatch, learnRate)
+
+        ###########################################
+        # if Test data is there then check network
+        # after each epoch. Track progress
+        ###########################################
+        if testData:
+            print ("Epoch {0}: {1} / {2}".format(j, self.evaluate(testData), nTest))
+        else:
+            print ("Epoch {0} complete".format(j))
+
+        ###################################################
+        # Update Weights and Biases using back-propagation
+        ###################################################
+        def updateMiniBatch(self, miniBatch, learnRate):
+            bias = [np.zeros(b.shape) for b in self.biases]
+            weight = [np.zeros(w.shape) for w in self.weights]
+            for x, y in miniBatch:
+                updateBiases, updateWeights = self.backPropagate(x, y)
+                bias = [preB + upB for preB, upB in zip(bias, updateBiases)]
+                weight = [preW + upW for preW, upW in zip(weight, updateWeights)]
+
+            self.biases = [b-(learnRate/len(miniBatch))*preB
+                   for b, preB in zip(self.biases, bias)]
+            self.weights = [w-(learnRate/len(miniBatch))*preW
+                   for w, preW in zip(self.weights, weights)]
+
+        def backPropagate(self, x, y):
+            bias = [np.zeros(b.shape) for b in self.biases]
+            weights = [np.zeros(w.shape) for w in self.weights]
+            activation = x
+            activation = [x]
+            storeZ = []
+            for b, w in zip(self.biases, self.weights):
+                z = np.dot(w, activation)+b
+                storeZ.append(z)
+                activation = sigmoid(z)
+                activation.append(activation)
+            delta = self.cost(activations[-1], y)*sigmoidPrime(storeZ[-1])
+            bias[-1] = delta
+            weights[-1] = np.dot(delta, activations[-2].tranpose())
+            for i in zrange(2, self.numberLayers):
+                z = storeZ[-1]
+                sigPrime = sigmoidPrime(z)
+            delta = np.dot(delta, activations[-i-1].tranpose())
+            return (bias, weights)
+
+        def cost(self, output, y):
+            return (output-y)
+
+        def evalutate(self, testData):
+            testResults = [(np.argmax(self.forward(x)), y)
+                for (x, y) in testData]
+            return sum(int(x == y) for (x, y) in testResults)
+
+##################
+# Sigmoid Fuction
+##################
+def sigmoid(x):
+    return 1.0/(1.0+np.exp(-x))
+
+############################
+# The derivative of sigmoid
+############################
+def sigmoidPrime(x):
+    return sigmoid(x)*(1-sigmoid(x))
+
+def vectorize(x):
+    v = np.zeros((10,1))
+    v[x] = 1.0
+    return v
+
+def main():
+
+    nInput = int(sys.argv[1])
+    nHidden = int(sys.argv[2])
+    nOutput = int(sys.argv[3])
+    trainX = np.loadtxt(sys.argv[4], delimiter=',')
+    trainY = np.loadtxt(sys.argv[5], delimiter=',')
+    testX = np.loadtxt(sys.argv[6], delimiter=',')
+    testY = np.loadtxt('TestDigitY.csv.gz', delimiter=',')
+    predictY = sys.argv[7] if len(sys.argv) > 7 else None
+
+
+if __name__ == "__main__":
+    main()
+        #TODO: First step randomize training set, then break up into
+        # batchsizes
+        #TODO: Second step take the batch sizes (2D vectors) and make into
+        # a 1D vector
+        #TODO: Take vector and input into NN, Weights are randomised numbers
+        # between 0 & 1 non inclusive
+        #TODO: Find error = sum of all errors
+        #TODO: back propagate only for each mini batch sample
+        #TODO: First round of the training set mini batch calculate error
+        # ONCE then fo to the next mini batch untill all training set is done
+        # which then equals ONE epoch
+        #TODO:Second time "TEST SET" then find the classification accuracy
+        # then repeat step for new mini batch
+
+        #NOTE: First sample give 10 numbers, (10 numbers - TARGET)^2 = (10
+        # new numbers), Sum them, 1 value is given which equals the error
+
+        #NOTE: if epoch goes up in vcalue of the mean square error, overfitting is happening, STOP the training
+
+
+############################################################
+# For back-propagation algorithm learning multilayer network
+# look at Chapter 18 page 755 int eh AI a modern approach
+############################################################
+
