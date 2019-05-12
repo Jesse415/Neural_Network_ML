@@ -1,8 +1,3 @@
-#TODO: Neural network needs 3 layers:
-#      1. Input layer
-#      2. Hidden layer
-#      3. Output layer
-
 #TODO: CLI accepts 7 arguments:
 #      1. nInput: Number of neurons in the input layer
 #      2. nHidden: number of neurons in the hidden layer
@@ -110,6 +105,7 @@
 #              (b) Part 2 (50 marks)
 #              (c) Part 3 (20 marks)
 #              (d) Report quality (10 marks)
+import sys
 import math
 import random
 import collections
@@ -129,7 +125,6 @@ class Network(object):
         self.biases = [np.random.randn(y,1) for y in sizes[1:]]
         self.weights = [np.random.randn(y,x)
             for x, y in zip(sizes[:1], sizes[1:])]
-
 
 
     def forward(self, i):
@@ -153,8 +148,7 @@ class Network(object):
             random.shuffle(trainingData)
             miniBatchs = [
                 trainingData[x:x+miniBatchSize]
-                for x in xrange(0, n, miniBatchSize)
-            ]
+                for x in xrange(0, n, miniBatchSize)]
 
         #########################################
         # For each Mini Batch update Weights and
@@ -242,7 +236,13 @@ def main():
     trainY = np.loadtxt(sys.argv[5], delimiter=',')
     testX = np.loadtxt(sys.argv[6], delimiter=',')
     testY = np.loadtxt('TestDigitY.csv.gz', delimiter=',')
-    predictY = sys.argv[7] if len(sys.argv) > 7 else None
+    print(nInput)
+    print(nHidden)
+    print(nOutput)
+    print(trainX)
+    print(trainY)
+
+    #predictY = sys.argv[7] if len(sys.argv) > 7 else None
 
 
 if __name__ == "__main__":
