@@ -1,8 +1,3 @@
-#TODO: Neural network needs 3 layers:
-#      1. Input layer
-#      2. Hidden layer
-#      3. Output layer
-
 #TODO: CLI accepts 7 arguments:
 #      1. nInput: Number of neurons in the input layer
 #      2. nHidden: number of neurons in the hidden layer
@@ -110,6 +105,7 @@
 #              (b) Part 2 (50 marks)
 #              (c) Part 3 (20 marks)
 #              (d) Report quality (10 marks)
+import sys
 import math
 import random
 import collections
@@ -117,20 +113,22 @@ import pickle as cPickle
 import gzip
 import numpy as np
 
+
 ##############################################################
 # The list sizes contains number of neurons
 # 2 neurons in first layer, 3 neurons in the second 1 in third
 # net = Network([2,3,1])
 ##############################################################
 class Network(object):
-    def __init__(self,sizes):
-        self.numberLayers = len(sizes)
-        self.sizes = sizes
-        self.biases = [np.random.randn(y,1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y,x)
-            for x, y in zip(sizes[:1], sizes[1:])]
+    def __init__(self, hidden):
+        self.hidden_layer = hidden
+        self.bias_one = 0.01*np.random.rand(hidden_layer, 1)
+        self.bias_two = 0.01*np.random.rand(10, 1)
+        self.weight_one = 0.01*np.random.rand(hidden_layer, 784)
+        self.weight_two = 0.01*np.random.rand(10, hidden_layer)
 
-
+    def printObject(self):
+        print(self)
 
     def forward(self, i):
         for b, w in zip(self.biases, self.weights):
@@ -138,11 +136,11 @@ class Network(object):
         return i
 
     ####################################
-    # Train the network with miniBatchs
+    # Train the network with mini_batchs
     ####################################
-    def StochasticGD(self, trainingData, epochs, miniBatchSize, learnRate, testData = None):
+    def stochasticGD(self, training_data, epochs, mini_batchSize, learn_rate, testData = None):
         if testData: nTest = len(testData)
-        n = len(trainingData)
+        n = len(training_data)
 
 
         ############################################
@@ -150,18 +148,17 @@ class Network(object):
         # into Mini Batchs
         ############################################
         for j in xrange(epochs):
-            random.shuffle(trainingData)
-            miniBatchs = [
-                trainingData[x:x+miniBatchSize]
-                for x in xrange(0, n, miniBatchSize)
-            ]
+            random.shuffle(training_data)
+            mini_batchs = [
+                training_data[x:x+mini_batchSize]
+                for x in xrange(0, n, mini_batchSize)]
 
         #########################################
         # For each Mini Batch update Weights and
         # Biases for ONE gradient descent
         #########################################
-        for miniBatch in miniBatchs:
-            self.updateMiniBatch(miniBatch, learnRate)
+        for mini_batch in mini_batchs:
+            self.updateMiniBatch(mini_batch, learn_rate)
 
         ###########################################
         # if Test data is there then check network
@@ -175,18 +172,18 @@ class Network(object):
         ###################################################
         # Update Weights and Biases using back-propagation
         ###################################################
-        def updateMiniBatch(self, miniBatch, learnRate):
+        def updateMiniBatch(self, mini_batch, learn_rate):
             bias = [np.zeros(b.shape) for b in self.biases]
             weight = [np.zeros(w.shape) for w in self.weights]
-            for x, y in miniBatch:
-                updateBiases, updateWeights = self.backPropagate(x, y)
-                bias = [preB + upB for preB, upB in zip(bias, updateBiases)]
-                weight = [preW + upW for preW, upW in zip(weight, updateWeights)]
+            for x, y in mini_batch:
+                update_biases, update_weights = self.backPropagate(x, y)
+                bias = [prev_bias + next_bias for prev_bias, next_bias in zip(bias, update_biases)]
+                weight = [prev_weight + next_weight for prev_weight, next_weight in zip(weight, update_weights)]
 
-            self.biases = [b-(learnRate/len(miniBatch))*preB
-                   for b, preB in zip(self.biases, bias)]
-            self.weights = [w-(learnRate/len(miniBatch))*preW
-                   for w, preW in zip(self.weights, weights)]
+            self.biases = [b-(learn_rate/len(mini_batch))*prev_bias
+                   for b, prev_bias in zip(self.biases, bias)]
+            self.weights = [w-(learn_rate/len(mini_batch))*prev_weight
+                   for w, prev_weight in zip(self.weights, weights)]
 
         def backPropagate(self, x, y):
             bias = [np.zeros(b.shape) for b in self.biases]
@@ -199,12 +196,12 @@ class Network(object):
                 storeZ.append(z)
                 activation = sigmoid(z)
                 activation.append(activation)
-            delta = self.cost(activations[-1], y)*sigmoidPrime(storeZ[-1])
+            delta = self.cost(activations[-1], y)*sigmoid_prime(storeZ[-1])
             bias[-1] = delta
             weights[-1] = np.dot(delta, activations[-2].tranpose())
-            for i in zrange(2, self.numberLayers):
+            for i in zrange(2, self.number_layers):
                 z = storeZ[-1]
-                sigPrime = sigmoidPrime(z)
+                sigPrime = sigmoid_prime(z)
             delta = np.dot(delta, activations[-i-1].tranpose())
             return (bias, weights)
 
@@ -225,7 +222,7 @@ def sigmoid(x):
 ############################
 # The derivative of sigmoid
 ############################
-def sigmoidPrime(x):
+def sigmoid_prime(x):
     return sigmoid(x)*(1-sigmoid(x))
 
 def vectorize(x):
@@ -234,15 +231,47 @@ def vectorize(x):
     return v
 
 def main():
+    epoch = 30
+    mini_batch_size = 20
+    learning_rate = 3.0
 
-    nInput = int(sys.argv[1])
-    nHidden = int(sys.argv[2])
-    nOutput = int(sys.argv[3])
-    trainX = np.loadtxt(sys.argv[4], delimiter=',')
-    trainY = np.loadtxt(sys.argv[5], delimiter=',')
-    testX = np.loadtxt(sys.argv[6], delimiter=',')
+
+#    nInput = int(sys.argv[1])
+#    nHidden = int(sys.argv[2])
+#    nOutput = int(sys.argv[3])
+#    trainX = np.loadtxt(sys.argv[4], delimiter=',')
+#    trainY = np.loadtxt(sys.argv[5], delimiter=',')
+#    testX = np.loadtxt(sys.argv[6], delimiter=',')
+#    testY = np.loadtxt('TestDigitY.csv.gz', delimiter=',')
+
+    #predictY = sys.argv[7] if len(sys.argv) > 7 else None
+    train_x = np.loadtxt('TrainDigitX.csv.gz', delimiter=',')
+    train_y = np.loadtxt('TrainDigitY.csv.gz', delimiter=',')
+    testX = np.loadtxt('TestDigitX.csv.gz', delimiter=',')
     testY = np.loadtxt('TestDigitY.csv.gz', delimiter=',')
-    predictY = sys.argv[7] if len(sys.argv) > 7 else None
+
+    n_hidden = 10
+
+    # make 50000 rows of 10 collums
+    # and flag the number that is the training set
+    matrix_i = np.zeros(shape=(50000, 10))
+    for i, value in enumerate(train_y):
+        matrix_i[i][int(value)] = 1
+
+    # Shuffle training set
+    indeces = np.random.permutation(50000)
+    train_x, train_y = train_x[indeces,:], matrix_i[indeces,:]
+
+    neural_network = Network(n_hidden)
+
+    # training_data, epochs, mini_batchSize, learn_rate, testData = None
+    neural_network.stochasticGD(train_x, epoch, mini_batch_size, learning_rate, train_y)
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
