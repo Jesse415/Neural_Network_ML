@@ -1,5 +1,7 @@
+import sys
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
-
 
 class Network():
     def __init__(self, hidden):
@@ -17,6 +19,7 @@ class Network():
         return out_one, out_two
 
     def stochasticGD(self, train_x, train_y, epoch, mini_batchSize, learn_rate, test_x, test_y):
+        plot_y = []
         # split data into mini batches
         split_x = np.hsplit(train_x, train_x.shape[1] / mini_batchSize)
         split_y = np.hsplit(train_y, train_y.shape[1] / mini_batchSize)
@@ -53,8 +56,21 @@ class Network():
             # Calculate accuracy num of right prediction / total preditions
             acc = sum(int(x == y)
                       for (x, y) in zip(predictions, test_y))/len(predictions)
-            print('Epoch {0}: Accuracy {1}'.format(i+1, acc))
 
+            print('Epoch {0}: Accuracy {1}'.format(i+1, acc))
+            plot_y.append(acc)
+        return plot_y
+
+def plot_points(y):
+    #z = np.linspace(0,2, 100)
+    for i in range(len(y)):
+        plt.plot(range(1,31),y[i])
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+
+    plt.title('Mini batch')
+    #plt.legend()
 
 def sigmoid(x):
     sum = 1.0/(1.0+np.exp(-x))
@@ -67,6 +83,7 @@ def main():
     learning_rate = 3.0
     n_hidden = 30
 
+    #Hard coded for testing and output to txt
     # Importing data
     print('.........Loading')
     train_x = np.loadtxt('TrainDigitX.csv.gz', delimiter=',')
@@ -74,6 +91,12 @@ def main():
     test_x = np.loadtxt('TestDigitX.csv.gz', delimiter=',')
     test_y = np.loadtxt('TestDigitY.csv.gz', delimiter=',')
     print('Finished importing data')
+    print('Running.....')
+
+
+    orig_stdout = sys.stdout
+    file_out = open('Output.txt', 'w')
+    sys.stdout = file_out
 
     matrix_i = np.zeros(shape=(50000, 10))
     for i, value in enumerate(train_y):
@@ -85,11 +108,20 @@ def main():
 
     # Transpose train_x and train_y and test
     train_x, train_y, test_x = train_x.T, train_y.T, test_x.T
+    total = []
+    #uncomment the for loop when adding an array to learning_rate for graphing different variables
+    #for i in range(len(learning_rate)):
+        # training_data, epochs, mini_batchSize, learn_rate, testData = None
     # Initialize network
     neural_network = Network(n_hidden)
-    # training_data, epochs, mini_batchSize, learn_rate, testData = None
-    neural_network.stochasticGD(
-        train_x, train_y, epoch, mini_batch_size, learning_rate, test_x, test_y)
+    plot_y = neural_network.stochasticGD(
+    train_x, train_y, epoch, mini_batch_size, learning_rate, test_x, test_y)
+    total.append(plot_y)
+    plot_points(total)#, learning_rate)
+    plt.savefig('graph.png')
+    plt.close()
+    sys.stdout = orig_stdout
+    file_out.close()
 
 
 main()
